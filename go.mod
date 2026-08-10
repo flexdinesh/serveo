@@ -1,6 +1,6 @@
-module serve-openapi
+module github.com/flexdinesh/serve-openapi
 
-go 1.24.0
+go 1.25.0
 
 require github.com/spf13/cobra v1.10.2
 

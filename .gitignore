@@ -1,6 +1,6 @@
 # Local binaries
-/serve-md
-/serve-md.exe
+/serve-openapi
+/serve-openapi.exe
 /bin/
 
 # Go test and coverage output
@@ -10,3 +10,6 @@
 # Local Go workspace files
 /go.work
 /go.work.sum
+
+# Local agent scratch files
+/.scratch/
