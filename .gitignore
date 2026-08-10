@@ -1,0 +1,12 @@
+# Local binaries
+/serve-md
+/serve-md.exe
+/bin/
+
+# Go test and coverage output
+/*.test
+/coverage.out
+
+# Local Go workspace files
+/go.work
+/go.work.sum
