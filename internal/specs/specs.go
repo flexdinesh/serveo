@@ -36,6 +36,13 @@ type Source struct {
 	URL   string
 }
 
+// Entry describes an OpenAPI entry document and the title shown for it in
+// the document picker.
+type Entry struct {
+	Path  string
+	Title string
+}
+
 // Collection is a prepared set of entry documents and the root from which
 // they and their local references may be served.
 type Collection struct {
@@ -47,6 +54,25 @@ type Collection struct {
 // Prepare validates entry documents and prepares their common or explicitly
 // selected serving root.
 func Prepare(files []string, rootFlag string) (*Collection, error) {
+	entries := make([]Entry, len(files))
+	for index, name := range files {
+		entries[index] = Entry{Path: name, Title: filepath.Base(name)}
+	}
+	return prepareEntries(entries, rootFlag, true)
+}
+
+// PrepareEntries validates titled entry documents and prepares their common
+// or explicitly selected serving root.
+func PrepareEntries(entries []Entry, rootFlag string) (*Collection, error) {
+	return prepareEntries(entries, rootFlag, false)
+}
+
+func prepareEntries(entries []Entry, rootFlag string, inferTitles bool) (*Collection, error) {
+	files := make([]string, len(entries))
+	for index, entry := range entries {
+		files[index] = entry.Path
+	}
+
 	if len(files) == 0 {
 		return nil, fmt.Errorf("at least one spec file is required")
 	}
@@ -85,6 +111,7 @@ func Prepare(files []string, rootFlag string) (*Collection, error) {
 	resolvedRoot = filepath.Clean(resolvedRoot)
 
 	sources := make([]Source, 0, len(absoluteFiles))
+	relativePaths := make([]string, 0, len(absoluteFiles))
 	for index, absolute := range absoluteFiles {
 		relative, err := relativeWithin(root, absolute)
 		if err != nil {
@@ -102,18 +129,53 @@ func Prepare(files []string, rootFlag string) (*Collection, error) {
 			return nil, fmt.Errorf("%w: spec file %s resolves to %s", ErrUnsupportedType, files[index], resolvedFile)
 		}
 
+		title := entries[index].Title
+		if inferTitles {
+			metadata, err := inspectOpenAPIDocument(resolvedFile)
+			if err != nil {
+				return nil, fmt.Errorf("inspect spec file %s: %w", files[index], err)
+			}
+			if metadata.title != "" {
+				title = metadata.title
+			}
+		}
+
 		sources = append(sources, Source{
-			Title: filepath.Base(absolute),
+			Title: title,
 			Slug:  fmt.Sprintf("spec-%d", index+1),
 			URL:   "/spec/" + escapePath(relative),
 		})
+		relativePaths = append(relativePaths, filepath.ToSlash(relative))
 	}
+	disambiguateSourceTitles(sources, relativePaths)
 
 	return &Collection{
 		root:         root,
 		resolvedRoot: resolvedRoot,
 		sources:      sources,
 	}, nil
+}
+
+func disambiguateSourceTitles(sources []Source, relativePaths []string) {
+	counts := make(map[string]int, len(sources))
+	for _, source := range sources {
+		counts[source.Title]++
+	}
+
+	used := make(map[string]int, len(sources))
+	for index := range sources {
+		candidate := sources[index].Title
+		if counts[candidate] > 1 {
+			candidate = fmt.Sprintf("%s — %s", candidate, relativePaths[index])
+		}
+
+		used[candidate]++
+		if used[candidate] > 1 {
+			sources[index].Title = fmt.Sprintf("%s (%d)", candidate, used[candidate])
+			continue
+		}
+		sources[index].Title = candidate
+	}
 }
 
 // RootPath returns the absolute, cleaned path selected as the serving root.

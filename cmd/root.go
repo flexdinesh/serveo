@@ -23,6 +23,7 @@ import (
 
 type options struct {
 	port           int
+	depth          int
 	root           string
 	serverOverride string
 	noOpen         bool
@@ -45,11 +46,12 @@ func Execute() error {
 func newRootCommand(runCommand runner) *cobra.Command {
 	var opts options
 	command := &cobra.Command{
-		Use:   "serve-openapi <spec-file> [spec-file...]",
+		Use:   "serve-openapi <path> [spec-file...]",
 		Short: "Render local OpenAPI documents with Scalar",
-		Long: "Serve one or more local OpenAPI YAML or JSON documents and render them " +
-			"in a Scalar API Reference.",
-		Example: "  serve-openapi openapi.yaml\n" +
+		Long: "Discover OpenAPI documents in one directory, or serve one or more explicitly " +
+			"selected YAML or JSON documents, and render them in a Scalar API Reference.",
+		Example: "  serve-openapi .\n" +
+			"  serve-openapi openapi.yaml\n" +
 			"  serve-openapi auth.yaml users.yaml --root .\n" +
 			"  serve-openapi openapi.yaml --server https://api.example.com",
 		Args:          cobra.MinimumNArgs(1),
@@ -59,6 +61,9 @@ func newRootCommand(runCommand runner) *cobra.Command {
 			if opts.port < 0 || opts.port > 65535 {
 				return errors.New("--port must be between 0 and 65535")
 			}
+			if opts.depth < 0 {
+				return errors.New("--depth must not be negative")
+			}
 			if err := validateServerOverride(opts.serverOverride); err != nil {
 				return err
 			}
@@ -67,6 +72,7 @@ func newRootCommand(runCommand runner) *cobra.Command {
 	}
 
 	command.Flags().IntVar(&opts.port, "port", 0, "local port; 0 selects a free port")
+	command.Flags().IntVar(&opts.depth, "depth", 3, "maximum nested directory depth when discovering specs")
 	command.Flags().StringVar(&opts.root, "root", "", "root directory for local files and relative $refs")
 	command.Flags().StringVar(&opts.serverOverride, "server", "", "override the API server used for test requests")
 	command.Flags().BoolVar(&opts.noOpen, "no-open", false, "do not open the browser automatically")
@@ -80,7 +86,7 @@ func run(
 	stdout, stderr io.Writer,
 	opener browserOpener,
 ) error {
-	collection, err := specs.Prepare(files, opts.root)
+	collection, err := prepareCollection(ctx, files, opts)
 	if err != nil {
 		return err
 	}
@@ -136,6 +142,32 @@ func run(
 		}
 		return nil
 	}
+}
+
+func prepareCollection(ctx context.Context, paths []string, opts options) (*specs.Collection, error) {
+	if len(paths) == 1 {
+		info, err := os.Stat(paths[0])
+		if err == nil && info.IsDir() {
+			entries, err := specs.Discover(ctx, paths[0], opts.depth)
+			if err != nil {
+				return nil, err
+			}
+			root := opts.root
+			if root == "" {
+				root = paths[0]
+			}
+			return specs.PrepareEntries(entries, root)
+		}
+		return specs.Prepare(paths, opts.root)
+	}
+
+	for _, path := range paths {
+		info, err := os.Stat(path)
+		if err == nil && info.IsDir() {
+			return nil, errors.New("a directory may only be supplied as the sole path")
+		}
+	}
+	return specs.Prepare(paths, opts.root)
 }
 
 func validateServerOverride(value string) error {

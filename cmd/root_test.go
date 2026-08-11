@@ -27,7 +27,7 @@ func TestRootCommandDefaults(t *testing.T) {
 	if strings.Join(gotFiles, ",") != "openapi.yaml" {
 		t.Fatalf("files = %v", gotFiles)
 	}
-	if gotOptions.port != 0 || gotOptions.root != "" || gotOptions.serverOverride != "" || gotOptions.noOpen {
+	if gotOptions.port != 0 || gotOptions.depth != 3 || gotOptions.root != "" || gotOptions.serverOverride != "" || gotOptions.noOpen {
 		t.Fatalf("default options = %+v", gotOptions)
 	}
 }
@@ -41,7 +41,7 @@ func TestRootCommandParsesFlags(t *testing.T) {
 		return nil
 	})
 	command.SetArgs([]string{
-		"auth.yaml", "users.json", "--port", "8080", "--root", "apis",
+		"auth.yaml", "users.json", "--port", "8080", "--depth", "5", "--root", "apis",
 		"--server", "https://api.example.com", "--no-open",
 	})
 	if err := command.Execute(); err != nil {
@@ -50,7 +50,7 @@ func TestRootCommandParsesFlags(t *testing.T) {
 	if strings.Join(gotFiles, ",") != "auth.yaml,users.json" {
 		t.Fatalf("files = %v", gotFiles)
 	}
-	if gotOptions.port != 8080 || gotOptions.root != "apis" || gotOptions.serverOverride != "https://api.example.com" || !gotOptions.noOpen {
+	if gotOptions.port != 8080 || gotOptions.depth != 5 || gotOptions.root != "apis" || gotOptions.serverOverride != "https://api.example.com" || !gotOptions.noOpen {
 		t.Fatalf("parsed options = %+v", gotOptions)
 	}
 }
@@ -60,6 +60,7 @@ func TestRootCommandRejectsInvalidArguments(t *testing.T) {
 		nil,
 		{"openapi.yaml", "--port", "-1"},
 		{"openapi.yaml", "--port", "65536"},
+		{"openapi.yaml", "--depth", "-1"},
 		{"openapi.yaml", "--server", "example.com"},
 		{"openapi.yaml", "--server", "file:///tmp/api.yaml"},
 	}
@@ -71,6 +72,67 @@ func TestRootCommandRejectsInvalidArguments(t *testing.T) {
 		command.SetArgs(args)
 		if err := command.Execute(); err == nil {
 			t.Fatalf("Execute(%v) error = nil", args)
+		}
+	}
+}
+
+func TestPrepareCollectionDiscoversDirectory(t *testing.T) {
+	root := t.TempDir()
+	entry := filepath.Join(root, "services", "users", "openapi.yaml")
+	if err := os.MkdirAll(filepath.Dir(entry), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(entry, []byte("openapi: 3.1.1\ninfo:\n  title: Users API\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	collection, err := prepareCollection(context.Background(), []string{root}, options{depth: 3})
+	if err != nil {
+		t.Fatalf("prepareCollection() error = %v", err)
+	}
+	if got := collection.RootPath(); got != root {
+		t.Fatalf("RootPath() = %q, want %q", got, root)
+	}
+	sources := collection.Sources()
+	if len(sources) != 1 || sources[0].Title != "Users API" || sources[0].URL != "/spec/services/users/openapi.yaml" {
+		t.Fatalf("Sources() = %#v", sources)
+	}
+}
+
+func TestPrepareCollectionUsesExplicitRootForDiscovery(t *testing.T) {
+	root := t.TempDir()
+	discoveryRoot := filepath.Join(root, "apis")
+	entry := filepath.Join(discoveryRoot, "openapi.yaml")
+	if err := os.MkdirAll(discoveryRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(entry, []byte("openapi: 3.1.1\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	collection, err := prepareCollection(context.Background(), []string{discoveryRoot}, options{depth: 3, root: root})
+	if err != nil {
+		t.Fatalf("prepareCollection() error = %v", err)
+	}
+	if got := collection.RootPath(); got != root {
+		t.Fatalf("RootPath() = %q, want %q", got, root)
+	}
+	if got := collection.Sources()[0].URL; got != "/spec/apis/openapi.yaml" {
+		t.Fatalf("source URL = %q", got)
+	}
+}
+
+func TestPrepareCollectionRejectsDirectoriesAmongMultiplePaths(t *testing.T) {
+	firstDirectory := t.TempDir()
+	secondDirectory := t.TempDir()
+	file := writeSpec(t)
+
+	for _, paths := range [][]string{
+		{firstDirectory, file},
+		{firstDirectory, secondDirectory},
+	} {
+		if _, err := prepareCollection(context.Background(), paths, options{depth: 3}); err == nil || !strings.Contains(err.Error(), "sole path") {
+			t.Fatalf("prepareCollection(%v) error = %v", paths, err)
 		}
 	}
 }

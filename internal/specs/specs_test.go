@@ -12,8 +12,8 @@ import (
 
 func TestPreparePreservesOrderedSourcesAndFindsCommonRoot(t *testing.T) {
 	root := t.TempDir()
-	first := writeFile(t, root, "apis/first spec.yaml", "openapi: 3.1.1\n")
-	second := writeFile(t, root, "schemas/second.json", `{"openapi":"3.1.1"}`)
+	first := writeFile(t, root, "apis/first spec.yaml", "openapi: 3.1.1\ninfo:\n  title: ' First API '\n")
+	second := writeFile(t, root, "schemas/second.json", `{"openapi":"3.1.1","info":{"title":"Second API"}}`)
 
 	collection, err := Prepare([]string{first, second}, "")
 	if err != nil {
@@ -24,11 +24,54 @@ func TestPreparePreservesOrderedSourcesAndFindsCommonRoot(t *testing.T) {
 		t.Fatalf("RootPath() = %q, want %q", got, root)
 	}
 	want := []Source{
-		{Title: "first spec.yaml", Slug: "spec-1", URL: "/spec/apis/first%20spec.yaml"},
-		{Title: "second.json", Slug: "spec-2", URL: "/spec/schemas/second.json"},
+		{Title: "First API", Slug: "spec-1", URL: "/spec/apis/first%20spec.yaml"},
+		{Title: "Second API", Slug: "spec-2", URL: "/spec/schemas/second.json"},
 	}
 	if got := collection.Sources(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("Sources() = %#v, want %#v", got, want)
+	}
+}
+
+func TestPrepareFallsBackWhenInfoTitleCannotBeInferred(t *testing.T) {
+	root := t.TempDir()
+	files := []string{
+		writeFile(t, root, "missing.yaml", "openapi: 3.1.1\n"),
+		writeFile(t, root, "blank.yaml", "openapi: 3.1.1\ninfo:\n  title: '   '\n"),
+		writeFile(t, root, "number.yaml", "openapi: 3.1.1\ninfo:\n  title: 42\n"),
+		writeFile(t, root, "sequence.yaml", "openapi: 3.1.1\ninfo:\n  title: [API]\n"),
+		writeFile(t, root, "malformed.yaml", "openapi: [\n"),
+	}
+
+	collection, err := Prepare(files, root)
+	if err != nil {
+		t.Fatalf("Prepare() error = %v", err)
+	}
+	want := []string{"missing.yaml", "blank.yaml", "number.yaml", "sequence.yaml", "malformed.yaml"}
+	for index, source := range collection.Sources() {
+		if source.Title != want[index] {
+			t.Errorf("source %d title = %q, want %q", index, source.Title, want[index])
+		}
+	}
+}
+
+func TestPrepareDisambiguatesDuplicateTitlesAndRepeatedPaths(t *testing.T) {
+	root := t.TempDir()
+	first := writeFile(t, root, "services/users/openapi.yaml", "openapi: 3.1.1\ninfo:\n  title: Shared API\n")
+	second := writeFile(t, root, "services/auth/openapi.yaml", "openapi: 3.1.1\ninfo:\n  title: Shared API\n")
+
+	collection, err := Prepare([]string{first, second, first}, root)
+	if err != nil {
+		t.Fatalf("Prepare() error = %v", err)
+	}
+	want := []string{
+		"Shared API — services/users/openapi.yaml",
+		"Shared API — services/auth/openapi.yaml",
+		"Shared API — services/users/openapi.yaml (2)",
+	}
+	for index, source := range collection.Sources() {
+		if source.Title != want[index] {
+			t.Errorf("source %d title = %q, want %q", index, source.Title, want[index])
+		}
 	}
 }
 

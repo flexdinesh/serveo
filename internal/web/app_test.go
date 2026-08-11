@@ -14,7 +14,7 @@ import (
 
 func TestAppRendersPinnedScalarConfiguration(t *testing.T) {
 	root := t.TempDir()
-	entry := writeFile(t, root, "api/<unsafe>.yaml", "openapi: 3.1.1\n")
+	entry := writeFile(t, root, "api/openapi.yaml", "openapi: 3.1.1\ninfo:\n  title: '<unsafe>'\n")
 	collection, err := specs.Prepare([]string{entry}, root)
 	if err != nil {
 		t.Fatal(err)
@@ -37,8 +37,13 @@ func TestAppRendersPinnedScalarConfiguration(t *testing.T) {
 		scalarURL,
 		`crossorigin="anonymous"`,
 		`src="/assets/app.js"`,
-		`\u003cunsafe\u003e.yaml`,
+		`\u003cunsafe\u003e`,
+		`<title>&lt;unsafe&gt;</title>`,
 		`&#34;disabled&#34;:true`,
+		`&#34;telemetry&#34;:false`,
+		`&#34;showDeveloperTools&#34;:&#34;never&#34;`,
+		`&#34;withDefaultFonts&#34;:false`,
+		`&#34;persistAuth&#34;:false`,
 		`&#34;url&#34;:&#34;https://api.example.com&#34;`,
 	} {
 		if !strings.Contains(body, expected) {
@@ -50,6 +55,9 @@ func TestAppRendersPinnedScalarConfiguration(t *testing.T) {
 	}
 	if strings.Contains(body, "<unsafe>") {
 		t.Fatal("unsafe title was rendered as markup")
+	}
+	if strings.Contains(body, "customCss") {
+		t.Fatal("page contains custom Scalar CSS")
 	}
 }
 

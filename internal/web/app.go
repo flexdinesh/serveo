@@ -59,9 +59,13 @@ type pageData struct {
 }
 
 type scalarConfiguration struct {
-	Agent   scalarAgent    `json:"agent"`
-	Sources []scalarSource `json:"sources"`
-	Servers []scalarServer `json:"servers,omitempty"`
+	Agent              scalarAgent    `json:"agent"`
+	Telemetry          bool           `json:"telemetry"`
+	ShowDeveloperTools string         `json:"showDeveloperTools"`
+	WithDefaultFonts   bool           `json:"withDefaultFonts"`
+	PersistAuth        bool           `json:"persistAuth"`
+	Sources            []scalarSource `json:"sources"`
+	Servers            []scalarServer `json:"servers,omitempty"`
 }
 
 type scalarAgent struct {
@@ -154,8 +158,12 @@ func (a *App) serveSpec(w http.ResponseWriter, r *http.Request) {
 
 func renderPage(sources []specs.Source, serverOverride string) ([]byte, error) {
 	configuration := scalarConfiguration{
-		Agent:   scalarAgent{Disabled: true},
-		Sources: make([]scalarSource, len(sources)),
+		Agent:              scalarAgent{Disabled: true},
+		Telemetry:          false,
+		ShowDeveloperTools: "never",
+		WithDefaultFonts:   false,
+		PersistAuth:        false,
+		Sources:            make([]scalarSource, len(sources)),
 	}
 	for i, source := range sources {
 		configuration.Sources[i] = scalarSource{
