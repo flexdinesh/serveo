@@ -36,6 +36,7 @@ func TestAppRendersPinnedScalarConfiguration(t *testing.T) {
 	for _, expected := range []string{
 		scalarURL,
 		`crossorigin="anonymous"`,
+		`href="/assets/app.css"`,
 		`src="/assets/app.js"`,
 		`\u003cunsafe\u003e`,
 		`<title>&lt;unsafe&gt;</title>`,
@@ -129,8 +130,18 @@ func TestAppAppliesSecurityAndHostRestrictions(t *testing.T) {
 func TestAppHandlesRoutesMethodsAndHead(t *testing.T) {
 	app := newTestApp(t)
 
+	stylesheet := request(t, app, http.MethodGet, "/assets/app.css", "example.com")
+	if stylesheet.Code != http.StatusOK || !strings.Contains(stylesheet.Body.String(), "--scalar-sidebar-width") {
+		t.Fatalf("stylesheet response = %d %q", stylesheet.Code, stylesheet.Body.String())
+	}
+	if got := stylesheet.Header().Get("Content-Type"); got != "text/css; charset=utf-8" {
+		t.Fatalf("stylesheet Content-Type = %q", got)
+	}
+
 	javaScript := request(t, app, http.MethodGet, "/assets/app.js", "example.com")
-	if javaScript.Code != http.StatusOK || !strings.Contains(javaScript.Body.String(), "Scalar.createApiReference") {
+	if javaScript.Code != http.StatusOK ||
+		!strings.Contains(javaScript.Body.String(), "Scalar.createApiReference") ||
+		!strings.Contains(javaScript.Body.String(), "window.sessionStorage") {
 		t.Fatalf("JavaScript response = %d %q", javaScript.Code, javaScript.Body.String())
 	}
 	if !strings.HasPrefix(javaScript.Header().Get("Content-Type"), "application/javascript") {

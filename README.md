@@ -89,6 +89,11 @@ Use `--no-open` to skip opening the browser, or `--port` to request a specific p
 
 Stop the server with `Ctrl-C`.
 
+On desktop, resize Scalar's sidebar by dragging its divider with a mouse or touch input. When the
+divider is focused, use the arrow keys to adjust the width; double-click the divider or press
+`Home` to reset it. The selected width is stored in `sessionStorage` only for the current browser
+tab and server session. There is no CLI flag for configuring the sidebar width.
+
 ## Security and file scope
 
 - Entry documents and files served beneath `--root` must have a `.yaml`, `.yml`, or `.json`

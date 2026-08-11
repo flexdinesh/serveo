@@ -1,0 +1,54 @@
+:root {
+  --serve-openapi-sidebar-width: 288px;
+}
+
+#app {
+  --scalar-sidebar-width: var(--serve-openapi-sidebar-width);
+}
+
+.scalar-mcp-layer {
+  display: none !important;
+}
+
+.serve-openapi-sidebar-resizer {
+  position: fixed;
+  z-index: 20;
+  inset-block: 0;
+  inset-inline-start: calc(var(--serve-openapi-sidebar-width) - 4px);
+  width: 8px;
+  border: 0;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.serve-openapi-sidebar-resizer::before {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 3px;
+  width: 1px;
+  background: var(--scalar-border-color, #d8dae0);
+  content: "";
+}
+
+.serve-openapi-sidebar-resizer:hover::before,
+.serve-openapi-sidebar-resizer:focus-visible::before,
+.serve-openapi-sidebar-resizing .serve-openapi-sidebar-resizer::before {
+  width: 2px;
+  background: var(--scalar-color-accent, #2f80ed);
+}
+
+.serve-openapi-sidebar-resizer:focus-visible {
+  outline: none;
+}
+
+.serve-openapi-sidebar-resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+@media (width < 1000px), print {
+  .serve-openapi-sidebar-resizer {
+    display: none;
+  }
+}

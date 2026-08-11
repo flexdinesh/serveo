@@ -34,6 +34,9 @@ var indexHTML string
 //go:embed app.js
 var appJS []byte
 
+//go:embed app.css
+var appCSS []byte
+
 var indexTemplate = template.Must(template.New("index.html").Parse(indexHTML))
 
 // Config describes the local reference served by an App.
@@ -104,6 +107,7 @@ func New(config Config) (*App, error) {
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", app.serveIndex)
+	mux.HandleFunc("GET /assets/app.css", app.serveStylesheet)
 	mux.HandleFunc("GET /assets/app.js", app.serveJavaScript)
 	mux.HandleFunc("GET /spec/{path...}", app.serveSpec)
 	app.handler = mux
@@ -134,6 +138,14 @@ func (a *App) serveJavaScript(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_, _ = w.Write(appJS)
+}
+
+func (a *App) serveStylesheet(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/css; charset=utf-8")
+	if r.Method == http.MethodHead {
+		return
+	}
+	_, _ = w.Write(appCSS)
 }
 
 func (a *App) serveSpec(w http.ResponseWriter, r *http.Request) {
