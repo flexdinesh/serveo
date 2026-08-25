@@ -130,7 +130,7 @@ Build and run locally:
 
 ```sh
 go build -o ./bin/serve-openapi .
-./bin/serve-openapi path/to/openapi.yaml
+./bin/serve-openapi examples/openapi.yaml
 ```
 
 Run the checks used in CI:

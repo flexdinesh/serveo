@@ -1,0 +1,141 @@
+openapi: 3.1.0
+info:
+  title: Example Todo API
+  version: 1.0.0
+  description: A small example specification for testing serve-openapi locally.
+servers:
+  - url: http://localhost:8080
+    description: Example local API server
+tags:
+  - name: Todos
+    description: Manage todo items
+paths:
+  /todos:
+    get:
+      tags:
+        - Todos
+      summary: List todos
+      operationId: listTodos
+      parameters:
+        - name: completed
+          in: query
+          description: Filter todos by completion status.
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: A list of todo items.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Todo"
+              example:
+                - id: 1
+                  title: Try serve-openapi
+                  completed: false
+    post:
+      tags:
+        - Todos
+      summary: Create a todo
+      operationId: createTodo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewTodo"
+            example:
+              title: Try serve-openapi
+      responses:
+        "201":
+          description: The newly created todo item.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /todos/{todoId}:
+    parameters:
+      - $ref: "#/components/parameters/TodoId"
+    get:
+      tags:
+        - Todos
+      summary: Get a todo
+      operationId: getTodo
+      responses:
+        "200":
+          description: The requested todo item.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags:
+        - Todos
+      summary: Delete a todo
+      operationId: deleteTodo
+      responses:
+        "204":
+          description: The todo item was deleted.
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  parameters:
+    TodoId:
+      name: todoId
+      in: path
+      required: true
+      description: Numeric identifier of the todo item.
+      schema:
+        type: integer
+        minimum: 1
+  schemas:
+    NewTodo:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          example: Try serve-openapi
+    Todo:
+      allOf:
+        - $ref: "#/components/schemas/NewTodo"
+        - type: object
+          required:
+            - id
+            - completed
+          properties:
+            id:
+              type: integer
+              example: 1
+            completed:
+              type: boolean
+              default: false
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: Todo not found
+  responses:
+    BadRequest:
+      description: The request was invalid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: The todo item was not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
