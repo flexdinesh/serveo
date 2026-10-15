@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Example Todo API
   version: 1.0.0
-  description: A small example specification for testing serve-openapi locally.
+  description: A small example specification for testing serveo locally.
 servers:
   - url: http://localhost:8080
     description: Example local API server
@@ -33,7 +33,7 @@ paths:
                   $ref: "#/components/schemas/Todo"
               example:
                 - id: 1
-                  title: Try serve-openapi
+                  title: Try serveo
                   completed: false
     post:
       tags:
@@ -47,7 +47,7 @@ paths:
             schema:
               $ref: "#/components/schemas/NewTodo"
             example:
-              title: Try serve-openapi
+              title: Try serveo
       responses:
         "201":
           description: The newly created todo item.
@@ -103,7 +103,7 @@ components:
         title:
           type: string
           minLength: 1
-          example: Try serve-openapi
+          example: Try serveo
     Todo:
       allOf:
         - $ref: "#/components/schemas/NewTodo"

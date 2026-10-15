@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/flexdinesh/serve-openapi/internal/specs"
+	"github.com/flexdinesh/serveo/internal/specs"
 )
 
 const (

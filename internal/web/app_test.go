@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/flexdinesh/serve-openapi/internal/specs"
+	"github.com/flexdinesh/serveo/internal/specs"
 )
 
 func TestAppRendersPinnedScalarConfiguration(t *testing.T) {

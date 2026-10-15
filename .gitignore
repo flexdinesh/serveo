@@ -1,6 +1,6 @@
 # Local binaries
-/serve-openapi
-/serve-openapi.exe
+/serveo
+/serveo.exe
 /bin/
 
 # Go test and coverage output

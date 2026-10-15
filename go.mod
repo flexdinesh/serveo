@@ -1,4 +1,4 @@
-module github.com/flexdinesh/serve-openapi
+module github.com/flexdinesh/serveo
 
 go 1.25.0
 

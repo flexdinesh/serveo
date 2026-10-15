@@ -1,20 +1,20 @@
 :root {
-  --serve-openapi-sidebar-width: 288px;
+  --serveo-sidebar-width: 288px;
 }
 
 #app {
-  --scalar-sidebar-width: var(--serve-openapi-sidebar-width);
+  --scalar-sidebar-width: var(--serveo-sidebar-width);
 }
 
 .scalar-mcp-layer {
   display: none !important;
 }
 
-.serve-openapi-sidebar-resizer {
+.serveo-sidebar-resizer {
   position: fixed;
   z-index: 20;
   inset-block: 0;
-  inset-inline-start: calc(var(--serve-openapi-sidebar-width) - 4px);
+  inset-inline-start: calc(var(--serveo-sidebar-width) - 4px);
   width: 8px;
   border: 0;
   background: transparent;
@@ -22,7 +22,7 @@
   touch-action: none;
 }
 
-.serve-openapi-sidebar-resizer::before {
+.serveo-sidebar-resizer::before {
   position: absolute;
   inset-block: 0;
   inset-inline-start: 3px;
@@ -31,24 +31,24 @@
   content: "";
 }
 
-.serve-openapi-sidebar-resizer:hover::before,
-.serve-openapi-sidebar-resizer:focus-visible::before,
-.serve-openapi-sidebar-resizing .serve-openapi-sidebar-resizer::before {
+.serveo-sidebar-resizer:hover::before,
+.serveo-sidebar-resizer:focus-visible::before,
+.serveo-sidebar-resizing .serveo-sidebar-resizer::before {
   width: 2px;
   background: var(--scalar-color-accent, #2f80ed);
 }
 
-.serve-openapi-sidebar-resizer:focus-visible {
+.serveo-sidebar-resizer:focus-visible {
   outline: none;
 }
 
-.serve-openapi-sidebar-resizing {
+.serveo-sidebar-resizing {
   cursor: col-resize;
   user-select: none;
 }
 
 @media (width < 1000px), print {
-  .serve-openapi-sidebar-resizer {
+  .serveo-sidebar-resizer {
     display: none;
   }
 }
