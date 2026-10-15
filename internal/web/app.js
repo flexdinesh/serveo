@@ -4,8 +4,8 @@ const DEFAULT_SIDEBAR_WIDTH = 288
 const MIN_SIDEBAR_WIDTH = 240
 const MAX_SIDEBAR_WIDTH = 720
 const KEYBOARD_RESIZE_STEP = 16
-const SIDEBAR_WIDTH_PROPERTY = '--serve-openapi-sidebar-width'
-const SIDEBAR_WIDTH_STORAGE_KEY = 'serve-openapi.sidebar-width'
+const SIDEBAR_WIDTH_PROPERTY = '--serveo-sidebar-width'
+const SIDEBAR_WIDTH_STORAGE_KEY = 'serveo.sidebar-width'
 
 const app = document.querySelector('#app')
 const configuration = JSON.parse(app.dataset.configuration)
@@ -16,7 +16,7 @@ applySidebarWidth()
 Scalar.createApiReference('#app', configuration)
 
 resizer = document.createElement('div')
-resizer.className = 'serve-openapi-sidebar-resizer'
+resizer.className = 'serveo-sidebar-resizer'
 resizer.setAttribute('aria-controls', 'app')
 resizer.setAttribute('aria-label', 'Resize API navigation sidebar')
 resizer.setAttribute('aria-orientation', 'vertical')
@@ -39,7 +39,7 @@ resizer.addEventListener('pointerdown', (event) => {
   pointerStart = event.clientX
   widthStart = displayedSidebarWidth()
   resizer.setPointerCapture(pointerID)
-  document.body.classList.add('serve-openapi-sidebar-resizing')
+  document.body.classList.add('serveo-sidebar-resizing')
 })
 
 resizer.addEventListener('pointermove', (event) => {
@@ -91,7 +91,7 @@ function finishPointerResize(event) {
   }
 
   pointerID = undefined
-  document.body.classList.remove('serve-openapi-sidebar-resizing')
+  document.body.classList.remove('serveo-sidebar-resizing')
   storeSidebarWidth()
 }
 

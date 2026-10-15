@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/flexdinesh/serve-openapi/cmd"
+	"github.com/flexdinesh/serveo/cmd"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-// Package cmd defines the serve-openapi command-line interface.
+// Package cmd defines the serveo command-line interface.
 package cmd
 
 import (
@@ -15,9 +15,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/flexdinesh/serve-openapi/internal/browser"
-	"github.com/flexdinesh/serve-openapi/internal/specs"
-	"github.com/flexdinesh/serve-openapi/internal/web"
+	"github.com/flexdinesh/serveo/internal/browser"
+	"github.com/flexdinesh/serveo/internal/specs"
+	"github.com/flexdinesh/serveo/internal/web"
 	"github.com/spf13/cobra"
 )
 
@@ -46,14 +46,14 @@ func Execute() error {
 func newRootCommand(runCommand runner) *cobra.Command {
 	var opts options
 	command := &cobra.Command{
-		Use:   "serve-openapi <path> [spec-file...]",
+		Use:   "serveo <path> [spec-file...]",
 		Short: "Render local OpenAPI documents with Scalar",
 		Long: "Discover OpenAPI documents in one directory, or serve one or more explicitly " +
 			"selected YAML or JSON documents, and render them in a Scalar API Reference.",
-		Example: "  serve-openapi .\n" +
-			"  serve-openapi openapi.yaml\n" +
-			"  serve-openapi auth.yaml users.yaml --root .\n" +
-			"  serve-openapi openapi.yaml --server https://api.example.com",
+		Example: "  serveo .\n" +
+			"  serveo openapi.yaml\n" +
+			"  serveo auth.yaml users.yaml --root .\n" +
+			"  serveo openapi.yaml --server https://api.example.com",
 		Args:          cobra.MinimumNArgs(1),
 		SilenceErrors: true,
 		SilenceUsage:  true,

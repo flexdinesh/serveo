@@ -1,6 +1,6 @@
-# serve-openapi
+# serveo
 
-`serve-openapi` starts a local web server that renders OpenAPI YAML and JSON documents with
+`serveo` starts a local web server that renders OpenAPI YAML and JSON documents with
 [Scalar](https://scalar.com/products/api-references/integrations/html-js).
 
 ## Install
@@ -8,19 +8,19 @@
 Go 1.25 or later is required.
 
 ```sh
-go install github.com/flexdinesh/serve-openapi@latest
+go install github.com/flexdinesh/serveo@latest
 ```
 
 Render one document:
 
 ```sh
-serve-openapi path/to/openapi.yaml
+serveo path/to/openapi.yaml
 ```
 
 Discover and render every OpenAPI document beneath a directory:
 
 ```sh
-serve-openapi .
+serveo .
 ```
 
 The server selects a free local port, prints its URL, and opens it in your default browser.
@@ -28,14 +28,14 @@ The server selects a free local port, prints its URL, and opens it in your defau
 ## Usage
 
 ```text
-serve-openapi <spec-file> [spec-file...] [flags]
-serve-openapi <directory> [flags]
+serveo <spec-file> [spec-file...] [flags]
+serveo <directory> [flags]
 ```
 
 Render multiple documents in Scalar's document picker:
 
 ```sh
-serve-openapi auth-openapi.yaml users-openapi.yaml
+serveo auth-openapi.yaml users-openapi.yaml
 ```
 
 A directory must be the only positional argument; directories cannot be mixed with explicit files.
@@ -43,7 +43,7 @@ Directory discovery searches up to three nested levels by default. Use `--depth`
 limit. Depth `0` searches only files directly inside the supplied directory:
 
 ```sh
-serve-openapi . --depth 0
+serveo . --depth 0
 ```
 
 Discovery considers `.yaml`, `.yml`, and `.json` files and includes a document only when its root
@@ -61,7 +61,7 @@ worktree, discovery scans the filesystem normally.
 Override the API server used by Scalar's test-request UI:
 
 ```sh
-serve-openapi oauth-openapi.yaml \
+serveo oauth-openapi.yaml \
   --server https://auth.staging.setmore.com
 ```
 
@@ -70,7 +70,7 @@ Relative `$ref` files beneath that directory are available to Scalar. Set a wide
 reference reaches a parent directory:
 
 ```sh
-serve-openapi api/openapi.yaml --root .
+serveo api/openapi.yaml --root .
 ```
 
 Flags:
@@ -81,10 +81,10 @@ Flags:
       --port int       local port; 0 selects a free port
       --root string    root directory for local files and relative $refs
       --server string  override the API server used for test requests
-  -h, --help           help for serve-openapi
+  -h, --help           help for serveo
 ```
 
-If the browser cannot be opened, `serve-openapi` prints a warning and keeps the server running.
+If the browser cannot be opened, `serveo` prints a warning and keeps the server running.
 Use `--no-open` to skip opening the browser, or `--port` to request a specific port.
 
 Stop the server with `Ctrl-C`.
@@ -129,8 +129,8 @@ go mod download
 Build and run locally:
 
 ```sh
-go build -o ./bin/serve-openapi .
-./bin/serve-openapi examples/openapi.yaml
+go build -o ./bin/serveo .
+./bin/serveo examples/openapi.yaml
 ```
 
 Run the checks used in CI:
